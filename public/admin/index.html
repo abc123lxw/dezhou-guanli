@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>德阳德州酒吧 · 吧台管理系统</title>
+  <link rel="stylesheet" href="admin.css?v=20260611-2030" />
+</head>
+<body>
+  <!-- 登录 -->
+  <div id="login-view" class="view">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-brand">
+          <span class="login-logo">DY</span>
+          <div>
+            <h1>德阳德州酒吧</h1>
+            <p>吧台管理系统</p>
+          </div>
+        </div>
+        <div class="login-form">
+          <label>账号</label>
+          <input id="username" type="text" value="bar" autocomplete="username" />
+          <label>密码</label>
+          <input id="password" type="password" autocomplete="current-password" />
+          <button id="login-btn" class="btn-primary">进入吧台</button>
+          <div id="login-err" class="err"></div>
+        </div>
+        <div class="login-foot">
+          <span class="login-tip"><span class="ico-inline" data-icon="warning" data-icon-class="ico ico-warn"></span>未支付订单禁止出酒</span>
+          <span class="login-tip muted">所有点单仅走小程序</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主应用 -->
+  <div id="app-view" class="view hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark">DY</span>
+        <div>
+          <strong>德阳德州</strong>
+          <small id="admin-name">bar</small>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <span class="nav-group-label">营运台</span>
+          <button class="nav-item active" data-page="board">
+            <span class="nav-ico" data-icon="board"></span>
+            <span>作战看板</span>
+            <span class="nav-badge hidden" id="nav-badge-queue">0</span>
+          </button>
+          <button class="nav-item" data-page="floor">
+            <span class="nav-ico" data-icon="floor"></span>
+            <span>桌位实况</span>
+          </button>
+          <button class="nav-item" data-page="redeem">
+            <span class="nav-ico" data-icon="redeem"></span>
+            <span>核销中心</span>
+          </button>
+          <button class="nav-item" data-page="wine">
+            <span class="nav-ico" data-icon="drink"></span>
+            <span>存酒管理</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">客人</span>
+          <button class="nav-item" data-page="history">
+            <span class="nav-ico" data-icon="history"></span>
+            <span>订单历史</span>
+          </button>
+          <button class="nav-item" data-page="members">
+            <span class="nav-ico" data-icon="members"></span>
+            <span>会员查询</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">后台</span>
+          <button class="nav-item" data-page="products">
+            <span class="nav-ico" data-icon="products"></span>
+            <span>商品管理</span>
+          </button>
+          <button class="nav-item" data-page="inventory">
+            <span class="nav-ico" data-icon="inventory"></span>
+            <span>原料库存</span>
+          </button>
+          <button class="nav-item" data-page="stats" data-role="owner">
+            <span class="nav-ico" data-icon="stats"></span>
+            <span>经营数据</span>
+          </button>
+          <button class="nav-item" data-page="stored" data-role="owner">
+            <span class="nav-ico" data-icon="star"></span>
+            <span>存分管理</span>
+          </button>
+          <button class="nav-item" data-page="tools" data-role="owner">
+            <span class="nav-ico" data-icon="tools"></span>
+            <span>营运工具</span>
+          </button>
+          <button class="nav-item" data-page="audit" data-role="owner">
+            <span class="nav-ico" data-icon="history"></span>
+            <span>审计日志</span>
+          </button>
+        </div>
+      </nav>
+      <div class="sidebar-foot">
+        <button id="fullscreen-btn" class="nav-link nav-link-ico"><span data-icon="fullscreen" data-icon-class="ico ico-link"></span>全屏模式</button>
+        <button id="logout-btn" class="nav-link danger nav-link-ico"><span data-icon="logout" data-icon-class="ico ico-link"></span>退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="main-header shell-header">
+        <div class="header-left">
+          <p class="header-breadcrumb">德阳德州酒吧 · 吧台管理</p>
+          <h2 id="page-title">作战看板</h2>
+          <p id="server-time" class="header-sub">连接中…</p>
+        </div>
+        <div class="header-kpi">
+          <div class="kpi-pill gold">
+            <small>今日实收</small>
+            <strong id="hdr-revenue">¥0</strong>
+          </div>
+          <div class="kpi-pill accent">
+            <small>制作队列</small>
+            <strong id="hdr-queue">0</strong>
+          </div>
+          <div class="kpi-pill">
+            <small>今日赛事</small>
+            <strong id="hdr-tournament">0/18</strong>
+          </div>
+          <button id="sound-toggle" class="btn-icon sound-on" title="新单铃声：开" aria-label="切换新单铃声"><span data-icon="sound" data-icon-class="ico ico-btn"></span></button>
+          <button id="refresh-btn" class="btn-icon" title="刷新"><span data-icon="refresh" data-icon-class="ico ico-btn"></span></button>
+        </div>
+      </header>
+
+      <!-- 作战看板 · FloDesktop / satisfecho KDS -->
+      <section id="page-board" class="page active page-kds">
+        <div id="stock-alert-bar" class="stock-alert hidden" role="button" tabindex="0" title="点击查看原料库存"></div>
+
+        <div class="kds-toolbar">
+          <div class="kds-toolbar-left">
+            <span class="kds-live-badge" id="kds-live-badge"><i class="kds-pulse"></i> KDS 厨房屏</span>
+            <span class="kds-hint muted">待支付 → 待制作 → 制作中 · 颜色随等待时间变化</span>
+          </div>
+          <div class="kds-toolbar-right">
+            <span class="kds-stat"><em id="kds-total-queue">0</em> 单在队列</span>
+          </div>
+        </div>
+
+        <div class="board-kpi-row kds-kpi-row">
+          <div class="kpi-card kpi-card-main">
+            <span class="kpi-card-label">今日营收</span>
+            <span class="kpi-card-value" id="kpi-revenue">¥0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-card-label">今日订单</span>
+            <span class="kpi-card-value" id="kpi-orders">0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-card-label">待支付</span>
+            <span class="kpi-card-value warn" id="kpi-pending">0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-card-label">制作中</span>
+            <span class="kpi-card-value" id="kpi-making">0</span>
+          </div>
+        </div>
+
+        <div class="board-workspace kds-workspace">
+          <div class="board-grid kds-grid">
+            <div class="board-col kds-col kds-col-pending">
+              <div class="col-head danger-head kds-col-head">
+                <div class="kds-col-title"><span class="kds-col-dot danger"></span><h3>待支付</h3></div>
+                <span class="col-count" id="count-pending">0</span>
+              </div>
+              <div class="col-tip kds-col-tip">未付钱 · 禁止出酒</div>
+              <div id="col-pending" class="card-stack kds-stack"></div>
+            </div>
+            <div class="board-col board-col-main kds-col kds-col-queue">
+              <div class="col-head warn-head kds-col-head">
+                <div class="kds-col-title"><span class="kds-col-dot warn"></span><h3>待制作</h3></div>
+                <span class="col-count" id="count-paid">0</span>
+              </div>
+              <div id="col-paid" class="card-stack kds-stack"></div>
+            </div>
+            <div class="board-col kds-col kds-col-making">
+              <div class="col-head info-head kds-col-head">
+                <div class="kds-col-title"><span class="kds-col-dot info"></span><h3>制作中</h3></div>
+                <span class="col-count" id="count-making">0</span>
+              </div>
+              <div id="col-making" class="card-stack kds-stack"></div>
+            </div>
+          </div>
+
+          <div class="board-drink-bar panel-card kds-allday">
+            <div class="board-drink-head">
+              <div>
+                <h4><span data-icon="drink" data-icon-class="ico ico-sm"></span> All Day · 出酒汇总</h4>
+                <p class="muted kds-allday-sub">FloDesktop 风格 · 汇总今日待出杯数</p>
+              </div>
+              <span id="drink-total" class="kds-allday-total">0 杯</span>
+            </div>
+            <div id="drink-summary" class="drink-summary drink-summary-h kds-allday-chips"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 桌位实况 · BiteGo -->
+      <section id="page-floor" class="page page-floor-bitego">
+        <div class="bitego-toolbar panel-card">
+          <div class="floor-toolbar-left">
+            <h3 class="bitego-page-title">桌台总览</h3>
+            <span class="date-hint" id="floor-meta">北京时间 · 加载中…</span>
+            <p class="floor-hint muted">BiteGo 风格 · 点击桌台卡片查看详情</p>
+          </div>
+          <div class="toolbar-actions">
+            <div class="floor-slot-inline">
+              <span class="floor-current-slot" id="floor-current-slot">当前时段</span>
+              <label class="floor-slot-select-wrap">
+                <span class="muted">切换</span>
+                <select id="floor-slot-select" class="floor-slot-select"></select>
+              </label>
+            </div>
+            <button id="floor-refresh-btn" class="btn-accent">刷新</button>
+          </div>
+        </div>
+        <div id="floor-kpi" class="floor-kpi bitego-kpi"></div>
+        <div class="floor-legend bitego-legend">
+          <span><i class="dot dot-empty"></i>空位</span>
+          <span><i class="dot dot-reserved"></i>已预约</span>
+          <span><i class="dot dot-bar"></i>在店酒水单</span>
+        </div>
+        <div id="floor-overview" class="bitego-table-grid"></div>
+        <h4 class="bitego-detail-title">桌台详情</h4>
+        <div id="floor-tables" class="floor-grid bitego-detail-grid"></div>
+      </section>
+
+      <!-- 订单历史 · Kasirku -->
+      <section id="page-history" class="page page-kasirku">
+        <div class="ref-toolbar panel-card">
+          <div class="toolbar-filters">
+            <input type="date" id="history-from" class="date-input" />
+            <span class="date-sep">至</span>
+            <input type="date" id="history-to" class="date-input" />
+            <button id="history-query-btn" class="btn-accent">查询</button>
+          </div>
+          <div class="toolbar-search">
+            <span class="search-ico" data-icon="search" data-icon-class="ico ico-search"></span>
+            <input id="history-search" class="search-input" placeholder="取餐号 / 昵称 / 手机 / 交易号" />
+          </div>
+        </div>
+        <div class="ref-table-wrap panel-card">
+          <div id="history-list" class="ref-data-table"></div>
+        </div>
+        <div id="history-pagination" class="pagination-bar hidden"></div>
+      </section>
+
+      <!-- 会员查询 · fuint -->
+      <section id="page-members" class="page page-fuint">
+        <div class="fuint-search-bar panel-card">
+          <div class="fuint-search-inner">
+            <input type="tel" id="member-phone" class="fuint-search-input" placeholder="输入手机号查询会员" maxlength="11" />
+            <button id="member-phone-btn" class="btn-accent fuint-search-btn">查询</button>
+          </div>
+          <div class="fuint-search-alt">
+            <div class="member-alt-row">
+              <span class="member-alt-label">尾号</span>
+              <input type="tel" id="member-tail" class="member-input" placeholder="后 4 位" maxlength="4" />
+              <button id="member-tail-btn" class="btn-ghost member-btn-sm">查询</button>
+            </div>
+            <div class="member-alt-row">
+              <span class="member-alt-label">会员码</span>
+              <input id="member-scan" class="member-input" placeholder="邀请码 / 会员码" />
+              <button id="member-scan-btn" class="btn-ghost member-btn-sm">识别</button>
+            </div>
+          </div>
+          <div id="member-pick-list" class="member-pick-list hidden"></div>
+        </div>
+
+        <div class="fuint-member-body">
+          <aside class="fuint-member-side">
+            <div id="member-hero" class="fuint-vip-card hidden">
+              <div class="fuint-vip-empty">
+                <span data-icon="members" data-icon-class="ico ico-xl"></span>
+                <p>查询后显示会员卡</p>
+              </div>
+            </div>
+            <div id="member-hero-placeholder" class="fuint-vip-card fuint-vip-placeholder">
+              <div class="fuint-vip-empty">
+                <span data-icon="members" data-icon-class="ico ico-xl"></span>
+                <p>输入手机号开始查询</p>
+              </div>
+            </div>
+          </aside>
+          <main class="fuint-member-main panel-card">
+            <div class="fuint-tabs" id="member-tabs">
+              <button type="button" class="fuint-tab active" data-tab="overview">概览</button>
+              <button type="button" class="fuint-tab" data-tab="points">积分明细</button>
+              <button type="button" class="fuint-tab" data-tab="wine">存酒</button>
+              <button type="button" class="fuint-tab" data-tab="orders">订单记录</button>
+            </div>
+            <div id="member-detail" class="fuint-tab-content">
+              <div class="member-empty-state">
+                <div class="empty-icon"><span data-icon="members" data-icon-class="ico ico-xl"></span></div>
+                <p>查询会员后查看积分、存酒、储值</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- 核销中心 · fuint -->
+      <section id="page-redeem" class="page page-fuint-redeem">
+        <div class="fuint-redeem-layout">
+          <div class="fuint-redeem-main panel-card">
+            <h3>积分兑换核销</h3>
+            <p class="muted">fuint 风格 · 大码输入 · 回车确认</p>
+            <input id="redeem-code" class="fuint-redeem-input" placeholder="输入兑换码 AB12CD" autofocus />
+            <button id="redeem-btn" class="btn-primary btn-block fuint-redeem-btn">确认核销</button>
+            <div id="redeem-result" class="redeem-result"></div>
+          </div>
+          <div class="fuint-redeem-side">
+            <div class="panel-card">
+              <h4>待核销 <span id="pending-redeem-count" class="side-badge">0</span></h4>
+              <div id="pending-redeems" class="pending-list"></div>
+            </div>
+            <div class="panel-card">
+              <div class="ref-tabs" id="redeem-history-tabs">
+                <button type="button" class="ref-tab active" data-rh="completed">已核销</button>
+                <button type="button" class="ref-tab" data-rh="all">全部记录</button>
+              </div>
+              <div id="redeem-history-list" class="ref-log-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 存酒管理 -->
+      <section id="page-wine" class="page page-wine">
+        <div class="ref-toolbar panel-card">
+          <div>
+            <h3>存酒管理</h3>
+            <p class="muted">列表展示全部存酒 · 按取酒码或昵称筛选 · 无需手机号查询</p>
+          </div>
+          <div class="wine-toolbar-right">
+            <input id="wine-search" class="wine-search-input" placeholder="筛选取酒码 / 昵称" />
+            <div class="ref-tabs" id="wine-tabs">
+            <button type="button" class="ref-tab active" data-wine="pending">待取</button>
+            <button type="button" class="ref-tab" data-wine="completed">已取</button>
+            </div>
+          </div>
+        </div>
+        <div id="wine-list" class="ref-table-wrap panel-card"></div>
+      </section>
+
+      <!-- 经营数据 -->
+      <section id="page-stats" class="page page-stats">
+        <div class="page-toolbar stats-toolbar">
+          <div class="date-range-group">
+            <label class="date-label">开始日期</label>
+            <input type="date" id="stats-from" class="date-input" />
+            <span class="date-sep">至</span>
+            <label class="date-label">结束日期</label>
+            <input type="date" id="stats-to" class="date-input" />
+            <button id="stats-query-btn" class="btn-accent">查询</button>
+          </div>
+          <div class="date-presets">
+            <button class="preset-btn active" data-preset="today">今天</button>
+            <button class="preset-btn" data-preset="7d">近7天</button>
+            <button class="preset-btn" data-preset="30d">近30天</button>
+            <button class="preset-btn" data-preset="month">本月</button>
+          </div>
+          <span id="stats-date-hint" class="date-hint"></span>
+          <button id="export-csv-btn" class="btn-accent">导出 CSV</button>
+        </div>
+        <div class="stats-overview" id="stats-overview"></div>
+        <div class="stats-panels">
+          <div class="stats-panel panel-card">
+            <h4>热销 TOP</h4>
+            <div id="top-products" class="bar-chart"></div>
+          </div>
+          <div class="stats-panel panel-card">
+            <h4 id="trend-chart-title">时段分布</h4>
+            <div id="hourly-chart" class="hour-chart"></div>
+          </div>
+          <div class="stats-panel panel-card">
+            <h4>支付方式</h4>
+            <div id="method-breakdown" class="method-list"></div>
+          </div>
+          <div class="stats-panel panel-card">
+            <h4>客户复购</h4>
+            <div id="repeat-stats" class="method-list"></div>
+          </div>
+          <div class="stats-panel panel-card">
+            <h4>桌位营收</h4>
+            <div id="table-breakdown" class="method-list"></div>
+          </div>
+          <div class="stats-panel panel-card">
+            <h4>渠道占比</h4>
+            <div id="channel-chart" class="channel-bars"></div>
+          </div>
+          <div class="stats-panel panel-card stats-panel-wide">
+            <h4>订单追踪（时间 · 支付方式 · 金额）</h4>
+            <div id="recent-orders-table" class="stats-order-table"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 存分管理 -->
+      <section id="page-stored" class="page page-stored-v2">
+        <div class="stored-top-bar panel-card">
+          <div>
+            <h3>存分管理</h3>
+            <p class="muted">输入会员码加载 · 无需手机号 · 也可从「会员查询」带入</p>
+          </div>
+          <div class="stored-code-bar">
+            <input id="stored-page-code" class="stored-code-input" placeholder="会员码 / 邀请码" />
+            <button id="stored-page-load-btn" class="btn-accent">加载会员</button>
+            <input type="hidden" id="stored-page-user-id" />
+          </div>
+        </div>
+
+        <div class="stored-v2-grid">
+          <div class="stored-v2-left">
+            <div id="stored-hero" class="fuint-vip-card fuint-stored-card">
+              <div class="fuint-vip-empty">
+                <span data-icon="star" data-icon-class="ico ico-xl"></span>
+                <p>加载会员后显示积分与存分</p>
+              </div>
+            </div>
+            <div class="panel-card stored-adjust-v2">
+              <h4>手动调整存分</h4>
+              <div class="stored-adjust-fields">
+                <div class="form-row">
+                  <label>调整分值</label>
+                  <input id="stored-page-delta" class="field-input" placeholder="+100 或 -50" type="number" />
+                </div>
+                <div class="form-row">
+                  <label>原因</label>
+                  <input id="stored-page-reason" class="field-input" placeholder="活动赠送 / 补录" />
+                </div>
+              </div>
+              <div class="stored-adjust-btns">
+                <button id="stored-page-adjust-btn" class="btn-accent">确认调整存分</button>
+                <button id="stored-page-convert-btn" class="btn-ghost">积分转存分 10%</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-card stored-mall-panel">
+            <div class="stored-mall-head">
+              <h4>积分商城配置</h4>
+              <p class="muted small">保存积分价与上下架分开操作</p>
+            </div>
+            <div id="stored-points-mall" class="stored-mall-table-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 原料库存 · FloDesktop + satisfecho -->
+      <section id="page-inventory" class="page page-inventory-ref">
+        <div class="ref-toolbar panel-card">
+          <div class="toolbar-filters">
+            <input id="inv-search" class="toolbar-search" placeholder="搜索原料" />
+            <button class="btn-ghost" id="inv-filter-low">低库存</button>
+          </div>
+          <div class="toolbar-actions">
+            <button id="btn-add-ingredient" class="btn-accent">+ 新增原料</button>
+            <button id="btn-purchase-ingredient" class="btn-ghost" data-role="owner">采购入库</button>
+          </div>
+        </div>
+        <div id="inventory-list" class="inventory-grid"></div>
+        <div class="ref-split-panels">
+          <div class="panel-card ref-panel-half">
+            <h4>库存流水</h4>
+            <div id="inventory-movements" class="ref-log-list"></div>
+          </div>
+          <div class="panel-card ref-panel-half">
+            <h4>采购记录</h4>
+            <div id="inventory-purchases" class="ref-log-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 商品管理 · FloDesktop + CRMEB -->
+      <section id="page-products" class="page page-products-ref">
+        <div class="page-toolbar products-toolbar ref-toolbar panel-card">
+          <div class="category-tabs" id="product-tabs">
+            <button type="button" class="cat-tab active" data-cat="all"><span data-icon="package" data-icon-class="ico ico-tab"></span>全部</button>
+            <button type="button" class="cat-tab" data-cat="drink"><span data-icon="products" data-icon-class="ico ico-tab"></span>酒水</button>
+            <button type="button" class="cat-tab" data-cat="food"><span data-icon="food" data-icon-class="ico ico-tab"></span>小吃</button>
+            <button type="button" class="cat-tab" data-cat="other"><span data-icon="inventory" data-icon-class="ico ico-tab"></span>其他</button>
+          </div>
+          <span class="date-hint">估清后小程序下架 · 上下架需老板账号</span>
+        </div>
+        <div id="products-list" class="products-catalog"></div>
+      </section>
+
+      <!-- 营运工具 · fuint收银 + satisfecho班次 -->
+      <section id="page-tools" class="page page-tools-ref">
+        <div class="tools-ref-shell">
+          <div class="panel-card shift-panel" id="shift-panel">
+            <div class="shift-panel-head">
+              <h3>班次管理</h3>
+              <span id="shift-status-badge" class="shift-badge closed">未开班</span>
+            </div>
+            <div id="shift-info" class="shift-info muted">开班后可统计本班现金营收</div>
+            <div class="shift-actions" id="shift-actions">
+              <div class="shift-open-form" id="shift-open-form">
+                <input id="shift-opening-cash" class="field-input" placeholder="开班备用金（元）" type="number" />
+                <button id="shift-open-btn" class="btn-accent">开班</button>
+              </div>
+              <div class="shift-close-form hidden" id="shift-close-form">
+                <input id="shift-closing-cash" class="field-input" placeholder="交班实收现金（元）" type="number" />
+                <button id="shift-close-btn" class="btn-ghost">交班</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tools-cashier-grid">
+              <div class="tool-card panel-card">
+                <div class="tool-head">
+                  <div class="tool-icon-sm" data-thumb="groupon" data-thumb-alt="团购"></div>
+                  <div>
+                    <h4>团购核销</h4>
+                    <span class="tool-sub">美团 / 抖音券入账</span>
+                  </div>
+                </div>
+                <div class="tool-form">
+                  <select id="groupon-platform" class="field-input">
+                    <option value="meituan">美团</option>
+                    <option value="douyin">抖音</option>
+                  </select>
+                  <input id="groupon-code" class="field-input" placeholder="团购券码" />
+                  <div class="form-row">
+                    <input id="groupon-amount" class="field-input" placeholder="金额（元）" type="number" />
+                    <input id="groupon-product" class="field-input" placeholder="商品（可选）" />
+                  </div>
+                  <button id="groupon-btn" class="btn-accent btn-block">确认核销入账</button>
+                </div>
+              </div>
+
+              <div class="tool-card panel-card">
+                <div class="tool-head">
+                  <div class="tool-icon-sm" data-thumb="cash" data-thumb-alt="现金"></div>
+                  <div>
+                    <h4>现金补录</h4>
+                    <span class="tool-sub">线下现金收入登记</span>
+                  </div>
+                </div>
+                <div class="tool-form">
+                  <div class="form-row">
+                    <input id="cash-amount" class="field-input" placeholder="金额（元）" type="number" />
+                    <input id="cash-product" class="field-input" placeholder="商品名称" />
+                  </div>
+                  <input id="cash-note" class="field-input" placeholder="备注（可选）" />
+                  <button id="cash-btn" class="btn-accent btn-block">确认补录入账</button>
+                </div>
+              </div>
+            <div class="tool-card panel-card tool-goto-card" id="goto-stored-page">
+              <div class="tool-head">
+                <div class="tool-icon-sm" data-thumb="points" data-thumb-alt="存分"></div>
+                <div><h4>存分管理</h4><span class="tool-sub">独立页面</span></div>
+              </div>
+              <button type="button" class="btn-ghost btn-block" id="goto-stored-btn">前往存分管理 →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 审计日志 · fuint -->
+      <section id="page-audit" class="page page-audit">
+        <div class="ref-toolbar panel-card">
+          <div class="toolbar-filters">
+            <input type="date" id="audit-from" class="date-input" />
+            <span class="date-sep">至</span>
+            <input type="date" id="audit-to" class="date-input" />
+            <select id="audit-action" class="field-input audit-action-select">
+              <option value="">全部操作</option>
+              <option value="admin_login">登录</option>
+              <option value="admin_cash_order">现金补录</option>
+              <option value="admin_groupon_verify">团购核销</option>
+              <option value="admin_stored_score">存分调整</option>
+              <option value="admin_redeem_verify">兑换核销</option>
+              <option value="admin_inventory_update">库存调整</option>
+              <option value="admin_shift_open">开班</option>
+              <option value="admin_shift_close">交班</option>
+            </select>
+            <button id="audit-query-btn" class="btn-accent">查询</button>
+          </div>
+        </div>
+        <div id="audit-list" class="ref-table-wrap panel-card"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 订单详情弹窗 -->
+  <div id="order-detail-mask" class="order-detail-mask hidden">
+    <div class="order-detail-panel" role="dialog">
+      <div class="order-detail-head">
+        <h3 id="order-detail-title">订单详情</h3>
+        <button type="button" id="order-detail-close" class="order-detail-close" aria-label="关闭"><span data-icon="close" data-icon-class="ico ico-btn"></span></button>
+      </div>
+      <div id="order-detail-body" class="order-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- 吐司通知 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 新单浮层 -->
+  <div id="new-order-flash" class="new-order-flash hidden">
+    <span class="flash-icon" data-icon="bell" data-icon-class="ico ico-flash"></span>
+    <span id="flash-text">新订单</span>
+  </div>
+
+  <audio id="ding" preload="auto"></audio>
+
+  <!-- 新增原料弹窗 -->
+  <div id="add-ingredient-mask" class="order-detail-mask hidden">
+    <div class="order-detail-panel" style="max-width:420px">
+      <div class="order-detail-head">
+        <h3>新增原料</h3>
+        <button type="button" id="add-ingredient-close" class="order-detail-close">×</button>
+      </div>
+      <div class="form-grid" style="padding:20px 24px 8px">
+        <div class="form-row">
+          <label>原料名称</label>
+          <input id="ing-name" class="field-input" placeholder="例如：柠檬片" />
+        </div>
+        <div class="form-row">
+          <label>单位</label>
+          <input id="ing-unit" class="field-input" placeholder="片 / 克 / 瓶" value="片" />
+        </div>
+        <div class="form-row">
+          <label>初始库存</label>
+          <input id="ing-qty" type="number" class="field-input" value="50" />
+        </div>
+        <div class="form-row">
+          <label>预警值</label>
+          <input id="ing-alert" type="number" class="field-input" value="10" />
+        </div>
+      </div>
+      <div class="order-detail-actions">
+        <button id="add-ingredient-cancel" class="btn-ghost">取消</button>
+        <button id="add-ingredient-confirm" class="btn-accent">确认新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 采购入库弹窗 -->
+  <div id="purchase-mask" class="order-detail-mask hidden">
+    <div class="order-detail-panel" style="max-width:440px">
+      <div class="order-detail-head">
+        <h3>采购入库</h3>
+        <button type="button" id="purchase-close" class="order-detail-close">×</button>
+      </div>
+      <div class="form-grid" style="padding:20px 24px 8px">
+        <div class="form-row">
+          <label>原料</label>
+          <select id="purchase-item" class="field-input"></select>
+        </div>
+        <div class="form-row">
+          <label>入库数量</label>
+          <input id="purchase-qty" type="number" class="field-input" value="10" />
+        </div>
+        <div class="form-row">
+          <label>供应商</label>
+          <input id="purchase-supplier" class="field-input" placeholder="可选" />
+        </div>
+        <div class="form-row">
+          <label>备注</label>
+          <input id="purchase-note" class="field-input" placeholder="可选" />
+        </div>
+      </div>
+      <div class="order-detail-actions">
+        <button id="purchase-cancel" class="btn-ghost">取消</button>
+        <button id="purchase-confirm" class="btn-accent">确认入库</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin-icons.js?v=20260611-2030"></script>
+  <script src="admin-ui.js?v=20260611-2030"></script>
+  <script src="admin.js?v=20260611-2030"></script>
+</body>
+</html>

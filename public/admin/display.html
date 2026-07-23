@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>德阳德州酒吧 · 取餐叫号</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #14141c;
+      --border: #2a2a38;
+      --brand: #E85D4C;
+      --gold: #ffc107;
+      --text: #f5f5f5;
+      --muted: #888;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, 'PingFang SC', sans-serif;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { font-size: 28px; font-weight: 800; color: var(--brand); }
+    .date { font-size: 18px; color: var(--muted); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      padding: 32px 40px;
+      align-items: center;
+    }
+
+    .call-section {
+      text-align: center;
+      padding: 40px;
+    }
+    .call-label {
+      font-size: 24px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      letter-spacing: 4px;
+    }
+    .call-no {
+      font-size: 160px;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      text-shadow: 0 0 60px rgba(255, 193, 7, 0.3);
+      animation: glow 2s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 40px rgba(255, 193, 7, 0.2); }
+      50% { text-shadow: 0 0 80px rgba(255, 193, 7, 0.5); }
+    }
+    .call-sub {
+      font-size: 22px;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+    .queue-section h2 {
+      font-size: 20px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .queue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+    }
+
+    .queue-item {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      transition: border-color 0.3s;
+    }
+    .queue-item.urgency-warning { border-color: rgba(255, 107, 107, 0.5); }
+    .queue-item.urgency-critical {
+      border-color: #ff6b6b;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(255, 107, 107, 0); }
+    }
+
+    .q-no { font-size: 36px; font-weight: 900; color: var(--gold); }
+    .q-items { font-size: 16px; color: #ccc; }
+    .q-status {
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .q-status.paid { background: rgba(255,193,7,.15); color: var(--gold); }
+    .q-status.making { background: rgba(77,171,247,.15); color: #4dabf7; }
+
+    .ready-strip {
+      display: flex;
+      gap: 16px;
+      padding: 16px 40px;
+      background: rgba(76, 175, 80, 0.08);
+      border-top: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .ready-label {
+      font-size: 14px;
+      color: #81c784;
+      white-space: nowrap;
+      padding: 8px 0;
+      font-weight: 600;
+    }
+    .ready-chip {
+      padding: 8px 20px;
+      background: rgba(76, 175, 80, 0.15);
+      border-radius: 24px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #81c784;
+      white-space: nowrap;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px 40px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .footer strong { color: var(--gold); }
+
+    .empty-queue {
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+      .call-no { font-size: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">德阳德州酒吧</div>
+    <div class="date" id="date">--</div>
+  </header>
+
+  <main class="main">
+    <section class="call-section">
+      <div class="call-label">请取餐</div>
+      <div class="call-no" id="call-no">---</div>
+      <div class="call-sub" id="call-sub">制作完成后将显示取餐号</div>
+    </section>
+
+    <section class="queue-section">
+      <h2>制作队列 · <span id="queue-count">0</span> 单</h2>
+      <div class="queue-list" id="queue"></div>
+    </section>
+  </main>
+
+  <div class="ready-strip" id="ready-strip">
+    <span class="ready-label">最近完成</span>
+  </div>
+
+  <footer class="footer">
+    <span id="tip">所有消费请通过小程序下单</span>
+    <span>今日 <strong id="orders">0</strong> 笔 · ¥<strong id="revenue">0</strong></span>
+  </footer>
+
+  <script>
+    let lastCall = null;
+
+    function formatTimer(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    async function load() {
+      try {
+        const res = await fetch('/api/admin/display/public').then((r) => r.json());
+        document.getElementById('date').textContent = res.date;
+        document.getElementById('tip').textContent = res.tip;
+        document.getElementById('orders').textContent = res.orderCount;
+        document.getElementById('revenue').textContent = res.revenueYuan;
+        document.getElementById('queue-count').textContent = res.queue.length;
+
+        const callEl = document.getElementById('call-no');
+        const callSub = document.getElementById('call-sub');
+        if (res.currentCall) {
+          if (res.currentCall !== lastCall) {
+            callEl.style.animation = 'none';
+            callEl.offsetHeight;
+            callEl.style.animation = '';
+            lastCall = res.currentCall;
+          }
+          callEl.textContent = '#' + res.currentCall;
+          callSub.textContent = '请到吧台取餐';
+        } else {
+          callEl.textContent = '---';
+          callSub.textContent = '制作完成后将显示取餐号';
+        }
+
+        const queueEl = document.getElementById('queue');
+        if (!res.queue.length) {
+          queueEl.innerHTML = '<div class="empty-queue">暂无制作中订单</div>';
+        } else {
+          queueEl.innerHTML = res.queue.map((q) => `
+            <div class="queue-item urgency-${q.urgency || 'normal'}">
+              <div class="q-no">#${q.pickupNo}</div>
+              <div class="q-items">${q.items || ''}</div>
+              <div class="q-status ${q.status}">${q.status === 'paid' ? '待制作' : '制作中'} · ${formatTimer(q.elapsedSeconds)}</div>
+            </div>
+          `).join('');
+        }
+
+        const strip = document.getElementById('ready-strip');
+        const chips = (res.recentReady || []).map((r) =>
+          `<span class="ready-chip">#${r.pickupNo}</span>`
+        ).join('');
+        strip.innerHTML = `<span class="ready-label">最近完成</span>${chips || '<span class="ready-label">暂无</span>'}`;
+      } catch (_) {}
+    }
+
+    load();
+    setInterval(load, 5000);
+  </script>
+</body>
+</html>
